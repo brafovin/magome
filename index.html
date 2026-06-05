@@ -1,105 +1,120 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OCTAGON — UFC 5 Style MMA</title>
+<title>STREET BRAWL — Waffen-Kampf</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app">
 
-  <!-- ================= FIGHTER SELECT ================= -->
-  <section id="select-screen" class="screen active">
-    <div class="select-header">
-      <div class="brand"><span class="brand-mark">★</span> OCTAGON</div>
-      <div class="select-title">FIGHTER SELECT</div>
-      <div class="brand sub">CHOOSE YOUR FIGHTER</div>
+  <!-- ============ TITEL ============ -->
+  <section id="screen-title" class="screen active">
+    <div class="title-bg"></div>
+    <div class="title-content">
+      <div class="title-eyebrow">UNDERGROUND</div>
+      <h1 class="title-logo">STREET<br><span>BRAWL</span></h1>
+      <div class="title-sub">NO RULES · NO MERCY</div>
+      <button id="btn-start" class="btn-red">KÄMPFEN</button>
     </div>
+  </section>
 
-    <div class="select-body">
-      <!-- PLAYER SIDE -->
-      <div class="side player-side">
-        <div class="side-label">YOU</div>
-        <div class="roster" id="player-roster"></div>
+  <!-- ============ FIGHTER SELECT ============ -->
+  <section id="screen-select" class="screen">
+    <div class="sel-header">
+      <span class="sel-title">KÄMPFER WÄHLEN</span>
+    </div>
+    <div class="sel-body">
+      <!-- Spieler -->
+      <div class="sel-side" id="side-player">
+        <div class="side-tag player-tag">DU</div>
+        <div class="roster" id="roster-player"></div>
+        <div class="weapon-row" id="weapons-player"></div>
       </div>
 
-      <!-- CARD PREVIEW -->
-      <div class="preview-col">
-        <div class="vs-badge">VS</div>
-        <div class="card-pair">
-          <div class="fcard" id="player-card"></div>
-          <div class="fcard ai" id="ai-card"></div>
+      <!-- VS Vorschau -->
+      <div class="sel-preview">
+        <canvas id="preview-canvas" width="400" height="380"></canvas>
+        <div class="vs-text">VS</div>
+        <div class="preview-names">
+          <span id="prev-pname" class="pname-red">—</span>
+          <span id="prev-aname" class="pname-gold">—</span>
         </div>
-        <button id="fight-btn" class="fight-btn">FIGHT!</button>
+        <button id="btn-fight" class="btn-red btn-fight">FIGHT!</button>
       </div>
 
-      <!-- AI SIDE -->
-      <div class="side ai-side">
-        <div class="side-label">OPPONENT</div>
-        <div class="roster" id="ai-roster"></div>
+      <!-- KI -->
+      <div class="sel-side ai-side" id="side-ai">
+        <div class="side-tag ai-tag">GEGNER</div>
+        <div class="roster" id="roster-ai"></div>
+        <div class="weapon-row" id="weapons-ai"></div>
       </div>
     </div>
   </section>
 
-  <!-- ================= GAME ================= -->
-  <section id="game-screen" class="screen">
-    <!-- TOP HUD -->
+  <!-- ============ KAMPF ============ -->
+  <section id="screen-fight" class="screen">
     <div id="hud">
-      <div class="hud-fighter left">
-        <div class="portrait" id="p1-portrait"></div>
-        <div class="hud-bars">
-          <div class="hud-name" id="p1-name">FIGHTER</div>
-          <div class="bar health"><div class="fill" id="p1-health"></div></div>
-          <div class="bar stamina"><div class="fill" id="p1-stamina"></div></div>
+      <div class="hud-side hud-left">
+        <div class="hud-portrait" id="portrait-p"></div>
+        <div class="hud-info">
+          <div class="hud-name" id="hud-name-p">—</div>
+          <div class="weapon-badge" id="hud-weapon-p">FISTS</div>
+          <div class="bar-wrap"><div class="bar-fill health-bar" id="bar-hp-p"></div></div>
+          <div class="bar-wrap stam-wrap"><div class="bar-fill stam-bar" id="bar-st-p"></div></div>
+          <div class="bleed-indicator" id="bleed-p"></div>
         </div>
       </div>
 
       <div class="hud-center">
-        <div class="round-label">ROUND <span id="round-num">1</span></div>
-        <div class="clock" id="clock">5:00</div>
+        <div class="round-lbl">RUNDE <span id="hud-round">1</span></div>
+        <div class="clock" id="hud-clock">3:00</div>
         <div class="round-dots" id="round-dots"></div>
       </div>
 
-      <div class="hud-fighter right">
-        <div class="hud-bars">
-          <div class="hud-name" id="p2-name">FIGHTER</div>
-          <div class="bar health"><div class="fill" id="p2-health"></div></div>
-          <div class="bar stamina"><div class="fill" id="p2-stamina"></div></div>
+      <div class="hud-side hud-right">
+        <div class="hud-info right-info">
+          <div class="hud-name" id="hud-name-a">—</div>
+          <div class="weapon-badge" id="hud-weapon-a">FISTS</div>
+          <div class="bar-wrap"><div class="bar-fill health-bar" id="bar-hp-a"></div></div>
+          <div class="bar-wrap stam-wrap"><div class="bar-fill stam-bar" id="bar-st-a"></div></div>
+          <div class="bleed-indicator" id="bleed-a"></div>
         </div>
-        <div class="portrait" id="p2-portrait"></div>
+        <div class="hud-portrait" id="portrait-a"></div>
       </div>
     </div>
 
-    <canvas id="canvas" width="1280" height="720"></canvas>
+    <canvas id="game-canvas"></canvas>
 
-    <div id="technique-label"></div>
-    <div id="state-banner"></div>
+    <div id="tech-label"></div>
+    <div id="big-banner"></div>
+    <div id="combo-display"></div>
 
-    <div id="controls-hint">
-      A/D Move · S Block · J Jab · K Cross · U Hook · I Uppercut · L Body Kick · Shift+L Head Kick · B Spin Kick · O Takedown · N Knee/Clinch · (Ground) J/K GnP · F Pass · V Sub · W Get Up
+    <div id="hint-bar">
+      A/D Bewegen · S Ducken/Block · J Schnell · K Schwer · L Kick · Shift+L Spezial · U Weit · I Oben · O Entwaffnen · N Aufheben
     </div>
   </section>
 
-  <!-- ================= BETWEEN ROUNDS ================= -->
-  <section id="round-screen" class="screen">
+  <!-- ============ RUNDEN-PAUSE ============ -->
+  <section id="screen-round" class="screen">
     <div class="round-card">
-      <div class="round-card-title">END OF ROUND <span id="rc-round">1</span></div>
-      <div class="scorecards" id="scorecards"></div>
-      <div class="corner-advice" id="corner-advice"></div>
-      <div class="round-countdown" id="round-countdown">Next round in 3...</div>
+      <div class="rc-title">ENDE RUNDE <span id="rc-num">1</span></div>
+      <div id="rc-scores"></div>
+      <div id="rc-advice"></div>
+      <div id="rc-countdown">Nächste Runde in 5...</div>
     </div>
   </section>
 
-  <!-- ================= RESULT ================= -->
-  <section id="result-screen" class="screen">
+  <!-- ============ ERGEBNIS ============ -->
+  <section id="screen-result" class="screen">
     <div class="result-card">
-      <div class="result-method" id="result-method">KNOCKOUT</div>
-      <div class="result-winner" id="result-winner">WINNER</div>
-      <div class="result-detail" id="result-detail"></div>
-      <div class="highlight-reel" id="highlight-reel"></div>
-      <button id="rematch-btn" class="fight-btn">REMATCH</button>
-      <button id="menu-btn" class="ghost-btn">MAIN MENU</button>
+      <div class="result-method" id="res-method">K.O.</div>
+      <div class="result-winner" id="res-winner">SIEGER</div>
+      <div class="result-detail" id="res-detail"></div>
+      <div class="result-reel" id="res-reel"></div>
+      <button id="btn-rematch" class="btn-red">NOCHMAL</button>
+      <button id="btn-menu" class="btn-ghost">MENÜ</button>
     </div>
   </section>
 

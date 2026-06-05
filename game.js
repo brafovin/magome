@@ -277,6 +277,9 @@ class Game {
     this.p2=new Fighter(ROSTER[this.selAI], 1);
     this.p1.isPlayer=true;
     this.round=1; this.roundScores=[]; this.highlights=[]; this.particles=[];
+    // combo state
+    this.comboCount=0; this.comboLastFrame=0; this.comboWindow=52;
+    this._comboEl=this._ensureComboEl();
     this.setupRound();
     this.updateHUDStatic();
     this.show('game-screen');
@@ -337,6 +340,10 @@ class Game {
     if(this.shake>0) this.shake*=0.85;
     if(this.flashScreen>0) this.flashScreen-=0.055;
     this.regen(this.p1); this.regen(this.p2);
+    // reset combo if window expired
+    if(this.comboCount>0 && this.frame-this.comboLastFrame > this.comboWindow){
+      this.comboCount=0; this._showCombo(0,'');
+    }
     this.updateHUDLive();
     if(this.p1.health<=0) this.finish(this.p2,this.p1,'KO');
     else if(this.p2.health<=0) this.finish(this.p1,this.p2,'KO');
@@ -358,7 +365,16 @@ class Game {
       const mv=f.currentMove;
       if(mv.dur-f.attackTimer===mv.hit) this.resolveHit(f,opp,mv);
       f.attackTimer--;
-      if(f.attackTimer<=0){ f.currentMove=null; f.recovery=4; }
+      if(f.attackTimer<=0){
+        f.currentMove=null;
+        // shorter recovery if chaining a combo (buffered move)
+        f.recovery = f._nextMove ? 2 : 4;
+        // flush buffer
+        if(f._nextMove){
+          const next=f._nextMove; f._nextMove=null;
+          this.startMove(f,opp,next);
+        }
+      }
     }
     if(f.state===ST.STAGGER){ f.staggerTimer--; f.x+=f.facing*-1.4; if(f.staggerTimer<=0) f.state=ST.STAND; }
     if(f.state===ST.DOWN){ f.downTimer--; if(f.downTimer<=0&&f.health>0){ f.state=ST.STAND; f.invuln=40; } }
@@ -368,12 +384,15 @@ class Game {
   }
 
   playerMove(f){
-    if(!f.canAct()) return;
-    let mv=0;
-    if(this.keys['a']||this.keys['arrowleft']) mv-=1;
-    if(this.keys['arrowright']) mv+=1;
-    if(mv!==0&&f.state===ST.STAND){ f.x+=mv*3.4; f.legPhase+=0.32; }
-    f.blocking=!!this.keys['s']&&f.state===ST.STAND;
+    // movement — D key for right only when standing (not grounded)
+    const canMove = f.state===ST.STAND || f.state===ST.STAGGER;
+    if(canMove){
+      let mv=0;
+      if(this.keys['a']||this.keys['arrowleft'])  mv-=1;
+      if(this.keys['d']||this.keys['arrowright'])  mv+=1;
+      if(mv!==0){ f.x+=mv*(f.stamina>20?3.6:2.2); f.legPhase+=0.34; }
+    }
+    f.blocking=!!this.keys['s']&&f.state===ST.STAND&&f.attackTimer===0;
   }
 
   /* ═══════════════ INPUT ═══════════════ */
@@ -381,12 +400,12 @@ class Game {
     const f=this.p1, opp=this.p2, k=e.key.toLowerCase();
     if(f.state===ST.TOP){
       if(k==='j'||k==='k') this.startMove(f,opp,'gnp');
-      else if(k==='d') this.passGuard(f,opp);
+      else if(k==='f') this.passGuard(f,opp);   // F = pass guard (ground only)
       else if(k==='v') this.subAttempt(f,opp);
       return;
     }
     if(f.state===ST.BOT){
-      if(k==='w'){ if(f.state!==ST.GETUP){f.state=ST.GETUP;f.getupHold=0;} }
+      if(k==='w'&&f.state!==ST.GETUP){ f.state=ST.GETUP; f.getupHold=0; }
       else if(k==='v') this.subAttempt(f,opp);
       return;
     }
@@ -413,8 +432,14 @@ class Game {
   /* ═══════════════ MOVES ═══════════════ */
   startMove(f,opp,name){
     const mv=MOVES[name]; if(!mv) return;
-    if(f.attackTimer>0||f.recovery>0) return;
     if(f.stamina<mv.stam*0.5) return;
+    // buffer input: if in last 8 frames of an attack, queue next move
+    if(f.attackTimer>0){
+      if(f.attackTimer<=8) f._nextMove=name;
+      return;
+    }
+    if(f.recovery>0) return;
+    f._nextMove=null;
     f.currentMove=mv; f.attackTimer=mv.dur;
     f.stamina=Math.max(0,f.stamina-mv.stam); f.legPhase=0;
   }
@@ -490,8 +515,17 @@ class Game {
       this.shake=4; this.impact((f.x+opp.x)/2,opp.headY,0.5); return;
     }
     if(opp.invuln>0) return;
-    const power=mv.dmg*(0.7+f.strike*0.5);
+    let power=mv.dmg*(0.7+f.strike*0.5);
     const chinF=2-opp.chin;
+    // combo bonus damage
+    if(f===this.p1){
+      if(this.frame-this.comboLastFrame <= this.comboWindow){ this.comboCount++; }
+      else { this.comboCount=1; }
+      this.comboLastFrame=this.frame;
+      const bonus=Math.min(1.5, 1+this.comboCount*0.08);
+      power*=bonus;
+      this._showCombo(this.comboCount, mv.label);
+    }
     this.damage(opp,f,power,mv.flash*chinF,true,mv);
   }
 
@@ -535,15 +569,35 @@ class Game {
 
   technique(txt){
     const el=document.getElementById('technique-label');
-    el.textContent=txt; el.style.opacity='1';
+    el.textContent=txt; el.classList.add('show');
     clearTimeout(this._techTO);
-    this._techTO=setTimeout(()=>{el.style.opacity='0';},700);
+    this._techTO=setTimeout(()=>el.classList.remove('show'),700);
   }
   banner(txt,ms){
     const el=document.getElementById('state-banner');
-    el.textContent=txt; el.style.opacity='1'; el.style.transform='translate(-50%,-50%) scale(1)';
+    el.textContent=txt; el.classList.add('show');
     clearTimeout(this._banTO);
-    this._banTO=setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translate(-50%,-50%) scale(.6)'; },ms||1000);
+    this._banTO=setTimeout(()=>el.classList.remove('show'),ms||1000);
+  }
+  _ensureComboEl(){
+    let el=document.getElementById('combo-display');
+    if(!el){
+      el=document.createElement('div'); el.id='combo-display';
+      el.style.cssText='position:absolute;bottom:148px;left:50%;transform:translateX(-50%);text-align:center;z-index:11;pointer-events:none;transition:opacity .25s;';
+      document.getElementById('game-screen').appendChild(el);
+    }
+    return el;
+  }
+  _showCombo(count,label){
+    const el=this._comboEl; if(!el) return;
+    if(count<2){ el.style.opacity='0'; return; }
+    const NAMES={2:'COMBO',3:'TRIPLE',4:'QUAD',5:'PENTA'};
+    const tag=NAMES[count]||(count+'x COMBO');
+    const cols=['','','#ffdd44','#ff8822','#ff4422','#dd22ff'];
+    const col=cols[Math.min(5,count)]||'#ff4422';
+    el.innerHTML=`<div style="font-size:${22+count*2}px;font-weight:900;letter-spacing:3px;color:${col};text-shadow:0 0 18px ${col},0 2px 4px #000">${tag}</div>
+      <div style="font-size:13px;color:#fff;letter-spacing:2px;text-shadow:0 1px 3px #000">${label}</div>`;
+    el.style.opacity='1';
   }
 
   /* ═══════════════ AI ═══════════════ */
@@ -597,16 +651,38 @@ class Game {
     if(Math.random()>agg){ ai.aiTimer=18+Math.floor(Math.random()*30); return; }
     if(shoot>0&&dist<145&&Math.random()<shoot&&opp.health<90){ this.startShoot(ai,opp); ai.aiTimer=70; return; }
     if(st==='wrestler'&&dist<90&&Math.random()<0.4){ this.enterClinch(ai,opp); ai.aiTimer=40; return; }
+    // pick strike based on range
     let pick;
-    if(dist>170) pick=['bodykick','headkick','spinkick'][Math.floor(Math.random()*3)];
-    else if(dist>125) pick=['jab','cross','bodykick'][Math.floor(Math.random()*3)];
-    else pick=['jab','cross','hook','uppercut'][Math.floor(Math.random()*4)];
-    this.startMove(ai,opp,pick);
-    if(st==='brawler'&&Math.random()<0.6){
-      const combo=['cross','hook'][Math.floor(Math.random()*2)];
-      setTimeout(()=>{ if(ai.canAct()&&ai.state===ST.STAND) this.startMove(ai,opp,combo); },MOVES[pick].dur*16);
+    if(dist>175)      pick=['bodykick','headkick','spinkick'][Math.floor(Math.random()*3)];
+    else if(dist>130) pick=['jab','cross','bodykick'][Math.floor(Math.random()*3)];
+    else              pick=['jab','cross','hook','uppercut'][Math.floor(Math.random()*4)];
+
+    // AI combos via input buffer (same mechanism as player)
+    const COMBOS = {
+      striker:  [['jab','cross'],['cross','hook'],['jab','cross','hook'],['jab','uppercut']],
+      brawler:  [['cross','hook'],['jab','cross','hook'],['hook','uppercut'],['cross','hook','uppercut']],
+      counter:  [['cross','uppercut'],['jab','cross'],['hook','bodykick']],
+      wrestler: [['jab','cross'],['cross','hook']],
+    };
+    const comboPools = COMBOS[st]||COMBOS.striker;
+    const doCombo = Math.random() < (st==='brawler'?0.65:st==='striker'?0.5:0.35);
+    if(doCombo){
+      const seq = comboPools[Math.floor(Math.random()*comboPools.length)];
+      // start first move, buffer the rest via _nextMove chain
+      this.startMove(ai,opp,seq[0]);
+      // chain remaining using setTimeout to queue into buffer window
+      let delay = MOVES[seq[0]].dur * 16 - 120; // hit just before end
+      for(let i=1;i<seq.length;i++){
+        const mv=seq[i];
+        const d=delay;
+        setTimeout(()=>{ if(this.running&&ai.state===ST.STAND&&ai.health>0) this.startMove(ai,opp,mv); }, d);
+        delay += MOVES[mv].dur * 16 - 80;
+      }
+      ai.aiTimer = delay + 14 + Math.floor(Math.random()*22);
+    } else {
+      this.startMove(ai,opp,pick);
+      ai.aiTimer=MOVES[pick].dur+16+Math.floor(Math.random()*24);
     }
-    ai.aiTimer=MOVES[pick].dur+12+Math.floor(Math.random()*22);
   }
 
   /* ═══════════════ ROUND / FINISH ═══════════════ */

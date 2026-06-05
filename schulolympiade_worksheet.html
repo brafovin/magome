@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schulolympiade 2025 – Tabellenkalkulationsübung</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: #1a1a2e;
+    background: #f5f5f5;
+    padding: 20px;
+  }
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    padding: 32px 36px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+  /* Header */
+  .header {
+    text-align: center;
+    border-bottom: 3px solid #2c5f8a;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    font-size: 22px;
+    color: #2c5f8a;
+    letter-spacing: 1px;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: #666;
+    margin-top: 4px;
+  }
+  .header .meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 14px;
+    font-size: 11px;
+    color: #444;
+  }
+  .meta-field {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .meta-field label { font-weight: bold; color: #2c5f8a; }
+  .meta-field .line {
+    border-bottom: 1px solid #999;
+    width: 120px;
+    height: 14px;
+  }
+
+  /* Section headers */
+  .section-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 5px;
+    margin: 22px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title.blue  { background: #2c5f8a; }
+  .section-title.green { background: #2a7a4a; }
+  .section-title.purple{ background: #5a3a7a; }
+  .section-title.orange{ background: #b85a10; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 11.5px;
+  }
+  thead tr {
+    background: #e8eef5;
+  }
+  thead th {
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: bold;
+    color: #2c5f8a;
+    border: 1px solid #c8d4e0;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  tbody tr {
+    border-bottom: 1px solid #dde4ee;
+  }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #f0f4f8; }
+  td {
+    padding: 9px 10px;
+    vertical-align: top;
+    border: 1px solid #dde4ee;
+    line-height: 1.5;
+  }
+  td:first-child {
+    white-space: nowrap;
+    font-weight: bold;
+    color: #2c5f8a;
+    width: 90px;
+    background: #f0f4f8;
+  }
+  td:last-child {
+    width: 210px;
+    font-size: 11px;
+    color: #555;
+    background: #fffde8;
+    border-left: 3px solid #f0c040;
+  }
+  code {
+    font-family: 'Courier New', monospace;
+    background: #eef2f8;
+    border: 1px solid #c8d4e0;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 10.5px;
+    color: #1a3a6a;
+    display: inline-block;
+    margin: 2px 0;
+  }
+  .step-num {
+    display: inline-block;
+    background: #2c5f8a;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    text-align: center;
+    line-height: 18px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  .step-num.green  { background: #2a7a4a; }
+  .step-num.purple { background: #5a3a7a; }
+  .step-num.orange { background: #b85a10; }
+  .step-label {
+    font-size: 10px;
+    color: #888;
+    font-weight: normal;
+    display: block;
+    margin-top: 2px;
+  }
+  ul { padding-left: 16px; margin: 3px 0; }
+  li { margin: 2px 0; }
+  .checkmark { color: #2a7a4a; font-weight: bold; }
+  .arrow { color: #e07020; font-weight: bold; }
+
+  /* Footer */
+  .footer {
+    margin-top: 28px;
+    border-top: 2px solid #dde4ee;
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #888;
+  }
+  .grade-box {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 16px;
+    text-align: center;
+    font-size: 10px;
+  }
+  .grade-box .grade-label { color: #888; }
+  .grade-box .grade-line {
+    border-bottom: 1px solid #999;
+    width: 60px;
+    height: 20px;
+    margin: 4px auto 0;
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .page { box-shadow: none; border-radius: 0; padding: 20px 24px; }
+    .section-title { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    td:first-child, thead tr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>🏅 Schulolympiade 2025 — Tabellenkalkulation</h1>
+    <div class="subtitle">Auswertung mit Google Sheets / LibreOffice Calc</div>
+    <div class="meta">
+      <div class="meta-field"><label>Name:</label><div class="line"></div></div>
+      <div class="meta-field"><label>Klasse:</label><div class="line" style="width:70px"></div></div>
+      <div class="meta-field"><label>Datum:</label><div class="line" style="width:90px"></div></div>
+    </div>
+  </div>
+
+  <!-- TEIL 1 -->
+  <div class="section-title blue">📖 TEIL 1 – Formeln &amp; Berechnungen</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Schritt</th>
+        <th>Aufgabe</th>
+        <th>💡 Tipp</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="step-num">1a</span><span class="step-label">Vorbereitung</span></td>
+        <td>
+          Gehe zu <strong>'📖 Bewertungssystem'</strong> und lies alles durch.<br>
+          Beantworte die 3 Verständnisfragen, bevor du weitermachst.<br>
+          <span class="checkmark">✅</span> Erst wenn du alle Fragen beantworten kannst, geht es weiter!
+        </td>
+        <td>– kein Computer nötig –<br>Stift &amp; Papier reichen</td>
+      </tr>
+      <tr>
+        <td><span class="step-num">1b</span><span class="step-label">Punkte berechnen</span></td>
+        <td>
+          Gehe zu <strong>'🏆 Sportergebnisse'</strong>. Klicke auf Zelle <strong>H4</strong> und tippe:<br>
+          <code>=RUNDEN((20-D4)*10 + E4*15 + F4*8 + G4*40; 1)</code><br><br>
+          Erkläre dir selbst laut, was jeder Teil bedeutet:<br>
+          <ul>
+            <li><code>(20-D4)*10</code> → 100m-Punkte</li>
+            <li><code>E4*15</code> → Weitsprung-Punkte</li>
+            <li><code>F4*8</code> → Kugelstoß-Punkte</li>
+            <li><code>G4*40</code> → Hochsprung-Punkte</li>
+          </ul>
+        </td>
+        <td><strong>RUNDEN(Zahl; 1)</strong> rundet auf 1 Nachkommastelle.<br><br>Je schneller die Zeit, desto kleiner D4 → desto mehr Punkte!</td>
+      </tr>
+      <tr>
+        <td><span class="step-num">1c</span><span class="step-label">Formel kopieren</span></td>
+        <td>
+          Klicke auf <strong>H4</strong>. Gehe unten rechts in die Zelle → kleines blaues Quadrat.<br>
+          Ziehe es bis Zeile <strong>H18</strong> herunter.<br>
+          <span class="arrow">→</span> Alle 15 Schüler erhalten jetzt automatisch ihre Punkte!
+        </td>
+        <td>Das nennt man <strong>„Formel nach unten ziehen"</strong>.<br>Das Quadrat heißt <strong>Ausfüllkästchen</strong>.</td>
+      </tr>
+      <tr>
+        <td><span class="step-num">1d</span><span class="step-label">Durchschnitt</span></td>
+        <td>
+          Klicke auf eine freie Zelle (z.B. <strong>H20</strong>).<br>
+          Schreibe daneben: <em>Klassendurchschnitt</em><br>
+          Tippe in H20: <code>=MITTELWERT(H4:H18)</code><br><br>
+          Was ist der Durchschnitt der Klasse? ___________
+        </td>
+        <td><strong>MITTELWERT</strong> addiert alle Werte und teilt durch die Anzahl.<br><br>Entspricht: Summe ÷ 15</td>
+      </tr>
+      <tr>
+        <td><span class="step-num">1e</span><span class="step-label">Beste &amp; schlechteste Zeit</span></td>
+        <td>
+          Finde die schnellste und langsamste 100m-Zeit:<br>
+          <code>=MIN(D4:D18)</code> → schnellste Zeit<br>
+          <code>=MAX(D4:D18)</code> → langsamste Zeit<br><br>
+          Welcher Schüler hat gewonnen? ___________
+        </td>
+        <td><strong>MIN</strong> = kleinster Wert (kürzeste Zeit = schnellster Läufer)<br><br><strong>MAX</strong> = größter Wert</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- TEIL 2 -->
+  <div class="section-title green">🔃 TEIL 2 – Sortieren &amp; Filtern</div>
+  <table>
+    <thead>
+      <tr><th>Schritt</th><th>Aufgabe</th><th>💡 Tipp</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="step-num green">2a</span><span class="step-label">Rang berechnen</span></td>
+        <td>
+          Klicke auf Zelle <strong>I4</strong> und tippe:<br>
+          <code>=RANG(H4;H$4:H$18;0)</code><br>
+          Ziehe die Formel bis <strong>I18</strong> herunter.<br>
+          <span class="arrow">→</span> Jeder Schüler bekommt seinen Platz (1 = bester).
+        </td>
+        <td>Das <strong>$-Zeichen</strong> fixiert den Bereich beim Runterziehen.<br><br>Ohne $ würde sich der Bereich verschieben → falsche Ränge!</td>
+      </tr>
+      <tr>
+        <td><span class="step-num green">2b</span><span class="step-label">Sortieren</span></td>
+        <td>
+          Markiere den ganzen Datenbereich <strong>(A3:J18)</strong>.<br>
+          Klicke: <strong>Daten → Bereich sortieren</strong><br>
+          Wähle: Sortieren nach Spalte H → <strong>absteigend</strong><br>
+          <span class="arrow">→</span> Der Schüler mit den meisten Punkten steht oben.
+        </td>
+        <td><strong>Absteigend</strong> = größte Zahl zuerst.<br><strong>Aufsteigend</strong> = kleinste Zahl zuerst.</td>
+      </tr>
+      <tr>
+        <td><span class="step-num green">2c</span><span class="step-label">Autofilter &amp; Filtern</span></td>
+        <td>
+          Klicke auf Zeile 3 (Kopfzeile).<br>
+          Klicke: <strong>Daten → Filter erstellen</strong><br>
+          Klicke auf den kleinen Pfeil in der Spalte <em>'Klasse'</em>.<br>
+          Wähle nur <strong>'7b'</strong> aus.<br>
+          Frage: Wie viele Schüler aus 7b gibt es? ___________
+        </td>
+        <td>Zum Zurücksetzen:<br><strong>Daten → Filter entfernen</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- TEIL 3 -->
+  <div class="section-title purple">📊 TEIL 3 – Diagramme</div>
+  <table>
+    <thead>
+      <tr><th>Schritt</th><th>Aufgabe</th><th>💡 Tipp</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="step-num purple">3a</span><span class="step-label">Balkendiagramm</span></td>
+        <td>
+          Markiere Spalte B (Namen) + Spalte H (Punkte).<br>
+          <em>Tipp: Erste Spalte markieren, dann <strong>Strg/Cmd</strong> gedrückt halten und zweite Spalte dazumarkieren.</em><br>
+          Klicke: <strong>Einfügen → Diagramm → Balkendiagramm</strong><br>
+          Gib dem Diagramm den Titel:<br>
+          <em>„Gesamtpunkte Schulolympiade 2025"</em>
+        </td>
+        <td><strong>Strg+Klick</strong> = mehrere Bereiche gleichzeitig markieren.</td>
+      </tr>
+      <tr>
+        <td><span class="step-num purple">3b</span><span class="step-label">Kreisdiagramm</span></td>
+        <td>
+          Zähle zuerst, wie viele Schüler aus jeder Klasse kommen:<br>
+          <code>=ZÄHLENWENN(C4:C18;"7a")</code><br>
+          <code>=ZÄHLENWENN(C4:C18;"7b")</code><br>
+          <code>=ZÄHLENWENN(C4:C18;"7c")</code><br>
+          Erstelle damit ein Kreisdiagramm:<br>
+          <strong>Einfügen → Diagramm → Kreisdiagramm</strong>
+        </td>
+        <td><strong>ZÄHLENWENN</strong> zählt alle Zellen, die dem Suchbegriff entsprechen.<br><br>Die Anführungszeichen <code>""</code> sind wichtig!</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- TEIL 4 -->
+  <div class="section-title orange">🎨 TEIL 4 – Formatierung</div>
+  <table>
+    <thead>
+      <tr><th>Schritt</th><th>Aufgabe</th><th>💡 Tipp</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="step-num orange">4a</span><span class="step-label">Medaillen-Formel</span></td>
+        <td>
+          Klicke auf Zelle <strong>J4</strong> und tippe:<br>
+          <code>=WENN(I4=1;"🥇";WENN(I4=2;"🥈";WENN(I4=3;"🥉";"")))</code><br><br>
+          Ziehe die Formel bis <strong>J18</strong> herunter.<br>
+          <span class="arrow">→</span> Die Top 3 bekommen automatisch ihre Medaille!
+        </td>
+        <td><strong>Verschachtelte WENN-Formel:</strong><br>WENN(Bedingung; dann; sonst)<br><br>Hier sind 3 WENNs ineinander. Leere Anführungszeichen <code>""</code> = leere Zelle.</td>
+      </tr>
+      <tr>
+        <td><span class="step-num orange">4b</span><span class="step-label">Farben setzen</span></td>
+        <td>
+          Markiere die Zeile mit Platz 1 → Hintergrundfarbe: <strong style="color:#b8860b">Gold</strong><br>
+          Markiere die Zeile mit Platz 2 → Hintergrundfarbe: <strong style="color:#888">Silber</strong><br>
+          Markiere die Zeile mit Platz 3 → Hintergrundfarbe: <strong style="color:#cd7700">Orange</strong><br><br>
+          Formatierung: <strong>Format-Menü → Zellen formatieren → Füllung</strong>
+        </td>
+        <td>Farbe wählen: Klicke auf den <strong>Farbeimer</strong> in der Symbolleiste.</td>
+      </tr>
+      <tr>
+        <td><span class="step-num orange">4c</span><span class="step-label">Tabelle verschönern</span></td>
+        <td>
+          Mache die Tabelle so schön wie möglich:
+          <ul>
+            <li><span class="checkmark">✅</span> Spaltenbreiten anpassen (Doppelklick auf Spaltenränder)</li>
+            <li><span class="checkmark">✅</span> Zahlen zentrieren</li>
+            <li><span class="checkmark">✅</span> Kopfzeile fett + farbiger Hintergrund</li>
+            <li><span class="checkmark">✅</span> Rahmen um alle Zellen</li>
+            <li><span class="checkmark">✅</span> Schriftgröße: 11 für Daten, 12 für Überschriften</li>
+          </ul>
+        </td>
+        <td>Es gibt kein Richtig oder Falsch!<br>Mach es so, dass es <strong>gut aussieht und lesbar</strong> ist.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>Schulolympiade 2025 – Tabellenkalkulation &nbsp;|&nbsp; Klasse 7</div>
+    <div class="grade-box">
+      <div class="grade-label">Note</div>
+      <div class="grade-line"></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

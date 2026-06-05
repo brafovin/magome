@@ -1,110 +1,118 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MMA Fighter</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCTAGON 5 — MMA</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app">
-    <!-- Start Screen -->
-    <div id="start-screen" class="screen active">
-      <div class="title-box">
-        <h1>⚔️ MMA FIGHTER</h1>
-        <p class="subtitle">Street Octagon</p>
+<div id="app">
+
+  <!-- ============ TITLE ============ -->
+  <section id="screen-title" class="screen active">
+    <div class="title-glow"></div>
+    <div class="title-content">
+      <div class="title-kicker">PRESENTS</div>
+      <h1 class="title-logo">OCTAGON<span>5</span></h1>
+      <div class="title-sub">ULTIMATE FIGHTING</div>
+      <button id="btn-start" class="btn-primary">ENTER THE OCTAGON</button>
+      <div class="title-hint">A canvas MMA fighting experience</div>
+    </div>
+  </section>
+
+  <!-- ============ FIGHTER SELECT ============ -->
+  <section id="screen-select" class="screen">
+    <div class="select-header">
+      <div class="select-title">FIGHTER SELECT</div>
+      <div class="select-vs">CHOOSE YOUR FIGHTER</div>
+    </div>
+    <div class="select-body">
+      <div class="select-side" id="side-player">
+        <div class="side-label side-label-red">YOU</div>
+        <div class="roster" id="roster-player"></div>
       </div>
-      <div class="menu-buttons">
-        <button class="btn-primary" onclick="startGame()">KAMPF STARTEN</button>
-        <button class="btn-secondary" onclick="showControls()">STEUERUNG</button>
+
+      <div class="select-card-wrap">
+        <div class="fighter-card" id="card-player"></div>
+        <div class="vs-badge">VS</div>
+        <div class="fighter-card" id="card-ai"></div>
       </div>
-      <div id="controls-panel" class="controls-panel hidden">
-        <h3>Steuerung (Spieler 1)</h3>
-        <div class="controls-grid">
-          <div><kbd>A</kbd> / <kbd>D</kbd> — Bewegen</div>
-          <div><kbd>W</kbd> — Springen</div>
-          <div><kbd>S</kbd> — Ducken/Block</div>
-          <div><kbd>J</kbd> — Jab (Schneller Schlag)</div>
-          <div><kbd>K</kbd> — Cross (Harter Schlag)</div>
-          <div><kbd>L</kbd> — Kick (Tritt)</div>
-          <div><kbd>U</kbd> — Hook</div>
-          <div><kbd>I</kbd> — Uppercut</div>
-          <div><kbd>O</kbd> — Takedown</div>
+
+      <div class="select-side" id="side-ai">
+        <div class="side-label side-label-blue">OPPONENT</div>
+        <div class="roster" id="roster-ai"></div>
+      </div>
+    </div>
+    <div class="select-footer">
+      <button id="btn-fight" class="btn-primary">FIGHT!</button>
+    </div>
+  </section>
+
+  <!-- ============ FIGHT ============ -->
+  <section id="screen-fight" class="screen">
+    <div id="hud">
+      <div class="hud-fighter hud-left">
+        <div class="hud-photo" id="photo-p"></div>
+        <div class="hud-bars">
+          <div class="hud-name" id="name-p">FIGHTER</div>
+          <div class="bar bar-health"><div class="bar-fill health-fill" id="hp-p"></div></div>
+          <div class="bar bar-stam"><div class="bar-fill stam-fill" id="st-p"></div></div>
         </div>
-        <h3>Steuerung (Spieler 2 / KI Gegner)</h3>
-        <p style="color:#aaa; font-size:0.9rem;">KI-Gegner kämpft automatisch</p>
+      </div>
+
+      <div class="hud-center">
+        <div class="hud-round" id="hud-round">ROUND 1</div>
+        <div class="hud-clock" id="hud-clock">5:00</div>
+        <div class="round-dots" id="round-dots"></div>
+      </div>
+
+      <div class="hud-fighter hud-right">
+        <div class="hud-bars">
+          <div class="hud-name" id="name-a">FIGHTER</div>
+          <div class="bar bar-health"><div class="bar-fill health-fill" id="hp-a"></div></div>
+          <div class="bar bar-stam"><div class="bar-fill stam-fill" id="st-a"></div></div>
+        </div>
+        <div class="hud-photo" id="photo-a"></div>
       </div>
     </div>
 
-    <!-- Game Screen -->
-    <div id="game-screen" class="screen">
-      <div id="hud">
-        <div class="fighter-hud" id="p1-hud">
-          <div class="fighter-name">SPIELER</div>
-          <div class="health-bar-wrap">
-            <div class="health-bar" id="p1-health-bar"></div>
-          </div>
-          <div class="stamina-bar-wrap">
-            <div class="stamina-bar" id="p1-stamina-bar"></div>
-          </div>
-          <div class="hp-text" id="p1-hp-text">100</div>
-        </div>
+    <canvas id="game"></canvas>
 
-        <div id="round-info">
-          <div id="round-text">RUNDE 1</div>
-          <div id="timer">3:00</div>
-          <div id="combo-display"></div>
-        </div>
+    <div id="tech-label"></div>
+    <div id="state-tag"></div>
+    <div id="big-msg"></div>
 
-        <div class="fighter-hud right" id="p2-hud">
-          <div class="fighter-name">GEGNER</div>
-          <div class="health-bar-wrap">
-            <div class="health-bar" id="p2-health-bar"></div>
-          </div>
-          <div class="stamina-bar-wrap">
-            <div class="stamina-bar" id="p2-stamina-bar"></div>
-          </div>
-          <div class="hp-text" id="p2-hp-text">100</div>
-        </div>
-      </div>
-
-      <canvas id="game-canvas"></canvas>
-
-      <div id="fight-banner" class="fight-banner hidden">FIGHT!</div>
-      <div id="ko-banner" class="ko-banner hidden"></div>
-
-      <div id="mobile-controls">
-        <div class="mobile-row">
-          <button class="mob-btn" onpointerdown="mobileMove('left',true)" onpointerup="mobileMove('left',false)">◀</button>
-          <button class="mob-btn" onpointerdown="mobileAction('duck',true)" onpointerup="mobileAction('duck',false)">🛡</button>
-          <button class="mob-btn" onpointerdown="mobileMove('right',true)" onpointerup="mobileMove('right',false)">▶</button>
-        </div>
-        <div class="mobile-row">
-          <button class="mob-btn" onpointerdown="mobileAction('jump')">↑</button>
-          <button class="mob-btn atk" onclick="mobileAttack('jab')">JAB</button>
-          <button class="mob-btn atk" onclick="mobileAttack('cross')">CROSS</button>
-        </div>
-        <div class="mobile-row">
-          <button class="mob-btn atk" onclick="mobileAttack('hook')">HOOK</button>
-          <button class="mob-btn atk" onclick="mobileAttack('uppercut')">UPPER</button>
-          <button class="mob-btn atk kick" onclick="mobileAttack('kick')">KICK</button>
-          <button class="mob-btn atk takedown" onclick="mobileAttack('takedown')">TD</button>
-        </div>
-      </div>
+    <div id="controls-hint">
+      J jab · K cross · U hook · I uppercut · L body kick · &#8679;L head kick · B spin kick · S block ·
+      O takedown · N knee · D pass · V submit · W get up
     </div>
+  </section>
 
-    <!-- Result Screen -->
-    <div id="result-screen" class="screen">
-      <div id="result-box">
-        <h2 id="result-title"></h2>
-        <p id="result-subtitle"></p>
-        <div id="result-stats"></div>
-        <button class="btn-primary" onclick="restartGame()">NOCHMAL</button>
-        <button class="btn-secondary" onclick="goHome()">HAUPTMENÜ</button>
-      </div>
+  <!-- ============ ROUND CARD ============ -->
+  <section id="screen-round" class="screen">
+    <div class="round-card">
+      <div class="round-card-title" id="rc-title">END OF ROUND 1</div>
+      <div class="scorecard" id="rc-score"></div>
+      <div class="corner-advice" id="rc-advice"></div>
+      <div class="round-count" id="rc-count">3</div>
     </div>
-  </div>
+  </section>
 
-  <script src="game.js"></script>
+  <!-- ============ RESULT ============ -->
+  <section id="screen-result" class="screen">
+    <div class="result-glow"></div>
+    <div class="result-content">
+      <div class="result-method" id="res-method">KO</div>
+      <h1 class="result-winner" id="res-winner">WINNER</h1>
+      <div class="result-detail" id="res-detail"></div>
+      <div class="result-reel" id="res-reel"></div>
+      <button id="btn-rematch" class="btn-primary">REMATCH</button>
+      <button id="btn-menu" class="btn-ghost">MAIN MENU</button>
+    </div>
+  </section>
+
+</div>
+<script src="game.js"></script>
 </body>
 </html>
